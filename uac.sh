@@ -275,7 +275,6 @@ elif [[ ${action} -eq 4 ]]; then
 
 	exit 0
 
-
 ##############################################################   LISTUSERACCOUNT   ########################################################################
 elif [[ ${action} -eq 5 ]]; then
 
@@ -283,8 +282,6 @@ elif [[ ${action} -eq 5 ]]; then
 	echo -e "\nUser Accounts on the System except ROOT are listed below\n"
 
 	LIST_USERS; echo; exit 0
-
-
 
 fi
 
