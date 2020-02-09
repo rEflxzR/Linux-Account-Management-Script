@@ -1,6 +1,6 @@
 #!/bin/bash
 
-######################################################## GREETING MESSAGE FUNCTION #######################################################################
+######################################################## GREETING/HELP FUNCTION #######################################################################
 
 GREETING()
 {
@@ -18,8 +18,36 @@ echo "##########################################################################
 }
 
 
+HELP()
+{
+
+	echo -e '\n\n    Usage: uac [arguemnts] [OPTIONS] ["username1 username2 username 3 ..............username n"]'
+	echo -e "\n\t  Options: \n"
+	echo -e "\t\t-A\tCreate User Accounts with following Usernames"
+	echo -e "\t\t-m\tMake a Home Directory for the User"
+	echo -e "\t\t-g\tAdd User to a specified User Group"
+
+	echo -e "\n\t\t-D\tDelete User Accounts with following Usernames"
+	echo -e "\t\t-r\tDelete the Home Directory associated with the User Account"
+
+	echo -e "\n\t\t-P\tUpdate Passwords of User Accounts with following Usernames\n"
+
+	echo -e "\t\t-F\tFind a Particular User Account on the System\n"
+
+	echo -e "\t\t-L\tList all User Accounts on the System (Except Root)\n"
+
+	echo -e "\t\t-h\tShow Help Menu\n"
+
+	echo -e "\n\n\t  Example:"
+	echo -e "\t\t\tuac -m -g \"new_group\" -A \"uname1 uname2 uname3 uname4 .......\"\n"
+	echo -e "\t\t\tuac -r -D \"uname1 uname2 uname3 uname4 .......\"\n"
+	echo -e "\t\t\tuac -L\n\n"
+
+}
+
+
 ##########################################################################################################################################################
-######################################################## USER SEARCH FUNCTION ###############################################################################
+######################################################## USER LIST/FIND FUNCTION ###############################################################################
 
 FIND_USER()
 {
@@ -37,44 +65,42 @@ LIST_USERS()
 	cat /etc/passwd | awk -F ':' '{if($3>=1000 && $3!=65534) print $1}'
 }
 
+
 ##########################################################################################################################################################
 ######################################################## USER ADD FUNCTION ###############################################################################
 
 USERADD()
 {
-	if [[ userdir_make -eq 1 ]]; then
-		if [[ usergroup -eq 1 ]]; then
-			useradd -g ${groupname} -m ${1} &> /dev/null; local err=$(echo ${?})
-		else
-			useradd -m ${1} &> /dev/null; local err=$(echo ${?})
-		fi
+	if [[ userdir_make -eq 1 ]] && [[ usergroup -eq 1 ]]; then
+		useradd -N -g "${1}" -m "${2}" ; local err=$(echo ${?})
+	elif [[ userdir_make -eq 1 ]] && [[ usergroup -eq 0 ]]; then
+		useradd -m ${2}; local err=$(echo ${?})
+	elif [[ userdir_make -eq 0 ]] && [[ usergroup -eq 1 ]]; then
+		useradd -N -g "${1}" "${2}"; local err=$(echo ${?})
 	else
-		if [[ usergroup -eq 1 ]]; then
-			useradd -g ${groupname} -m ${1} &> /dev/null; local err=$(echo ${?})
-		else
-			useradd -m ${1} &> /dev/null; local err=$(echo ${?})
-		fi
+		useradd ${2}; local err=$(echo ${?})
 	fi
 
 	if [[ $err -eq 0 ]]; then
-		trap "echo -e '\n\nKeyboard Interrupt Signal Recieved, Last UserAccount: ${1} - was not Added to the System\n'; 
-		userdel -r ${1} &> /dev/null; echo '${1} - was Deleted after Keyboard Interrupt' 1>> ${HOME}/uacaccounts.log; 
+		trap "echo -e '\n\nKeyboard Interrupt Signal Recieved, Last UserAccount: ${2} - was not Added to the System\n'; 
+		userdel -r ${2} &> /dev/null; echo '${2} - was Deleted after Keyboard Interrupt' 1>> ${HOME}/uacaccounts.log; 
 		echo -e '\n--------------------------------------------------------------------------------\n' >> ${HOME}/uacaccounts.log; exit 2" SIGINT
 
 		local password=$(echo ${RANDOM}${RANDOM}${RANDOM}$(date +%N) | sha256sum | head -c10) &> /dev/null
 		echo -e "${password}\n${password}" | passwd ${1} &> /dev/null && passwd -e ${1} &> /dev/null
-		echo "$(date +'%D  %T')    ${1} : ${password}" 1>> ${HOME}/uacaccounts.log && appendac=1
+		echo "$(date +'%D  %T')    ${2} : ${password}" 1>> ${HOME}/uacaccounts.log && appendac=1
 
 	elif [[ $err -eq 3 ]]; then
-		echo "Invalid Username: '${1}'" 1>> ${HOME}/uacerror.log && appender=1
+		echo "Invalid Username: '${2}'" 1>> ${HOME}/uacerror.log && appender=1
 
 	elif [[ $err -eq 9 ]]; then
-		echo "The Username Already Exists: '${1}'" 1>> ${HOME}/uacerror.log && appender=1
+		echo "The Username Already Exists: '${2}'" 1>> ${HOME}/uacerror.log && appender=1
 
 	else
 		echo "There was an Error adding User to the System" 1>> ${HOME}/uacerror.log && appender=1
 	fi
 }
+
 
 ##########################################################################################################################################################
 ######################################################## USER DELETE FUNCTION ############################################################################
@@ -95,6 +121,7 @@ USERDEL()
 			fi
 		fi
 }
+
 
 ##########################################################################################################################################################
 ######################################################## USER PASSWORD UPDATE FUNCTION ###################################################################
@@ -117,44 +144,40 @@ PASSWORDUPDATE()
 	fi
 }
 
+
 ################################################################# MAIN ACTION MENU ############################################################################
 #############################################################################################################################################################
 
 if [[ $(id -u) -eq 0 ]]; then
 
 	action=0
-	while getopts a:d:p:f:g:lhrm OPTION 2> /dev/null; do
+	while getopts A:D:P:F:g:Lhrm OPTION 2> /dev/null; do
 		case ${OPTION} in
-			a)
+			A)
 				action=1
 				usernamea=${OPTARG}
 				;;
-			d)
+			D)
 				action=2
 				usernamed=${OPTARG}
 				;;
-			p)
+			P)
 				action=3
 				usernamep=${OPTARG}
 				;;
 
-			f)
+			F)
 				action=4
 				usernamef=${OPTARG}
 				;;
 
-			l)
+			L)
 				action=5
 				;;
 
 			h)
-				echo -e '\n\n    Usage: uac [OPTIONS] ["username1 username2 username 3 ..............username n"]'
-				echo -e "\n\tOptions: \n"
-				echo -e "\t\t-a\tAdd User Accounts of Following Usernames\n"
-				echo -e "\t\t-d\tDelete User Accounts of Following Usernames\n"
-				echo -e "\t\t-r\tDelete the Home directories of the Accounts, Used with -d flag\n"
-				echo -e "\t\t-p\tUpdate Passwords of following User Accounts\n"
-
+				GREETING
+				HELP
 				exit 0
 				;;
 
@@ -172,7 +195,7 @@ if [[ $(id -u) -eq 0 ]]; then
 				;;
 
 			?)
-				echo -e "\nUse '-h', You Need HELP!!!\n"
+				HELP
 				exit 5
 				;;
 		esac
@@ -182,7 +205,7 @@ if [[ $(id -u) -eq 0 ]]; then
 #############################################################################################################################################################
 ###################################################################   USERADD   #############################################################################
 if [[ ${action} -eq 0 ]]; then
-		echo -e "\nUse '-h', You Need HELP!!!\n"
+		HELP
 		exit 5
 fi
 
@@ -192,8 +215,9 @@ if [[ ${action} -eq 1 ]]; then
 
 	GREETING
 
+	groupadd ${groupname} &> /dev/null
 	for uname in ${usernamea}; do
-		USERADD ${uname}
+		USERADD "${groupname}" "${uname}"
 	done
 
 
