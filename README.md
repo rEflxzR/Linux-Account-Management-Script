@@ -1,5 +1,8 @@
 # LINUX ACCOUNT MANAGER
-Just a script to ease the Burden of Linux Admins [ Thank me Later :-) ]
+Just a script to ease the Burden of Linux Admins
+
+Suggestions / Critics / Appreciation :D
+are most welcome :-)
 
 # Steps to Use:
 1. Open a terminal and Clone the Repository
