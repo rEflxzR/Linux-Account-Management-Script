@@ -1,6 +1,6 @@
 # LINUX ACCOUNT MANAGAER
 
-Steps to Use:
+# Steps to Use:
 1. Open a terminal and Clone the Repository
 2. Navigate to uac.sh script
 3. Type 'chmod +x uac.sh'
