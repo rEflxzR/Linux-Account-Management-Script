@@ -21,7 +21,7 @@ echo "##########################################################################
 HELP()
 {
 
-	echo -e '\n\n    Usage: uac [arguemnts] [OPTIONS] ["username1 username2 username 3 ..............username n"]'
+	echo -e '\n\n    Usage: uac [OPTIONS] ["username1 username2 username 3 ..............username n"]'
 	echo -e "\n\t  Options: \n"
 	echo -e "\t\t-A\tCreate User Accounts with following Usernames"
 	echo -e "\t\t-m\tMake a Home Directory for the User"
